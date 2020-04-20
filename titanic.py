@@ -24,3 +24,8 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import Perceptron
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
+
+# Importing the dataset
+train_df = pd.read_csv('train.csv')
+test_df = pd.read_csv('test.csv')
+combine = [train_df, test_df]
