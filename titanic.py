@@ -216,6 +216,11 @@ test_df = test_df.drop(['Name'], axis=1)
 combine = [train_df, test_df]
 train_df.shape, test_df.shape
 
+#Assign numerical values to categorical variables
+categorical_features = ["Sex"]
+train_df = pd.get_dummies(train_df, columns = categorical_features)
+test_df = pd.get_dummies(test_df, columns = categorical_features)
+combine = [train_df, test_df]
 
 
 #Function Definitions
