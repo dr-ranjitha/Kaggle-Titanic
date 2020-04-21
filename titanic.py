@@ -220,8 +220,41 @@ train_df.shape, test_df.shape
 categorical_features = ["Sex"]
 train_df = pd.get_dummies(train_df, columns = categorical_features)
 test_df = pd.get_dummies(test_df, columns = categorical_features)
+train_df = train_df.drop(['Sex_male'], axis=1)
+test_df = test_df.drop(['Sex_male'], axis=1)
+train_df = train_df.rename(columns = {'Sex_female':'Sex'})
+test_df = test_df.rename(columns = {'Sex_female':'Sex'})
 combine = [train_df, test_df]
 
+#Fill missing age values
+grid = sns.FacetGrid(train_df, row='Pclass', col='Sex_female', size=2.2, aspect=1.6)
+grid.map(plt.hist, 'Age', alpha=.5, bins=20)
+grid.add_legend()
+
+guess_ages = np.zeros((2,3))
+guess_ages
+
+for dataset in combine:
+    for i in range(0, 2):
+        for j in range(0, 3):
+            guess_df = dataset[(dataset['Sex'] == i) & (dataset['Pclass'] == j+1)]['Age'].dropna()
+            age_guess = guess_df.median()
+            # Convert random age float to nearest .5 age
+            guess_ages[i,j] = int( age_guess/0.5 + 0.5 ) * 0.5
+    for i in range(0, 2):
+        for j in range(0, 3):
+            dataset.loc[ (dataset.Age.isnull()) & (dataset.Sex == i) & (dataset.Pclass == j+1),\
+                    'Age'] = guess_ages[i,j]
+
+    dataset['Age'] = dataset['Age'].astype(int)
+    
+train_df.head()
+
+#Age bins
+train_df['AgeBand'] = pd.cut(train_df['Age'], 5)
+train_df[['AgeBand', 'Survived']].groupby(['AgeBand'], as_index=False).mean().sort_values(by='AgeBand', ascending=True)      
+
+#Replace Age with ordinals based on these bins
 
 #Function Definitions
 def plot_count_dist(data, bin_df, label_column, target_column, figsize=(20, 5), use_bin_df=False):
