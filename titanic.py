@@ -291,6 +291,20 @@ for dataset in combine:
 
 train_df.loc[:, ['Age*Class', 'Age', 'Pclass']].head(10)
 
+#Fill in missing values for Embarked with common occuring port
+freq_port = train_df.Embarked.dropna().mode()[0]
+freq_port
+
+for dataset in combine:
+    dataset['Embarked'] = dataset['Embarked'].fillna(freq_port)
+    
+train_df[['Embarked', 'Survived']].groupby(['Embarked'], as_index=False).mean().sort_values(by='Survived', ascending=False)
+
+for dataset in combine:
+    dataset['Embarked'] = dataset['Embarked'].map( {'S': 0, 'C': 1, 'Q': 2} ).astype(int)
+
+train_df.head()
+
 
 
 #Function Definitions
