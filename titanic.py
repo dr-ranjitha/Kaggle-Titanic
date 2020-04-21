@@ -255,6 +255,43 @@ train_df['AgeBand'] = pd.cut(train_df['Age'], 5)
 train_df[['AgeBand', 'Survived']].groupby(['AgeBand'], as_index=False).mean().sort_values(by='AgeBand', ascending=True)      
 
 #Replace Age with ordinals based on these bins
+for dataset in combine:    
+    dataset.loc[ dataset['Age'] <= 16, 'Age'] = 0
+    dataset.loc[(dataset['Age'] > 16) & (dataset['Age'] <= 32), 'Age'] = 1
+    dataset.loc[(dataset['Age'] > 32) & (dataset['Age'] <= 48), 'Age'] = 2
+    dataset.loc[(dataset['Age'] > 48) & (dataset['Age'] <= 64), 'Age'] = 3
+    dataset.loc[ dataset['Age'] > 64, 'Age']
+train_df.head()
+
+train_df = train_df.drop(['AgeBand'], axis=1)
+combine = [train_df, test_df]
+train_df.head()
+
+#FamilySize which combines Parch and SibSp
+for dataset in combine:
+    dataset['FamilySize'] = dataset['SibSp'] + dataset['Parch'] + 1
+
+train_df[['FamilySize', 'Survived']].groupby(['FamilySize'], as_index=False).mean().sort_values(by='Survived', ascending=False)
+
+#Is traveling alone
+for dataset in combine:
+    dataset['IsAlone'] = 0
+    dataset.loc[dataset['FamilySize'] == 1, 'IsAlone'] = 1
+
+train_df[['IsAlone', 'Survived']].groupby(['IsAlone'], as_index=False).mean()
+
+train_df = train_df.drop(['Parch', 'SibSp', 'FamilySize'], axis=1)
+test_df = test_df.drop(['Parch', 'SibSp', 'FamilySize'], axis=1)
+combine = [train_df, test_df]
+
+train_df.head()
+
+for dataset in combine:
+    dataset['Age*Class'] = dataset.Age * dataset.Pclass
+
+train_df.loc[:, ['Age*Class', 'Age', 'Pclass']].head(10)
+
+
 
 #Function Definitions
 def plot_count_dist(data, bin_df, label_column, target_column, figsize=(20, 5), use_bin_df=False):
