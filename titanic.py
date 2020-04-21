@@ -71,6 +71,16 @@ train.Pclass.isnull().sum()
 train[['Pclass', 'Survived']].groupby(['Pclass'], as_index=False).mean().sort_values(by='Survived', ascending=False)
 sns.distplot(train.Pclass)
 sns.countplot(y='Pclass', data=train)
+train[['Pclass', 'Survived']].groupby(['Pclass'], as_index=False).mean().sort_values(by='Survived', ascending=False)
+plot_count_dist(train, 
+                bin_df=train, 
+                label_column='Survived', 
+                target_column='Pclass', 
+                figsize=(20, 10))
+
+grid = sns.FacetGrid(train, col='Survived', row='Pclass', size=2.2, aspect=1.6)
+grid.map(plt.hist, 'Age', alpha=.5, bins=20)
+grid.add_legend();
 
 #Sex
 train.Sex.isnull().sum()
@@ -81,8 +91,13 @@ sns.countplot(y="Sex", data=train)
 # sns.distplot(train.loc[train['Survived'] == 1]['Sex'], kde_kws={'label': 'Survived'})
 # sns.distplot(train.loc[train['Survived'] == 0]['Sex'], kde_kws={'label': 'Did not survive'})
 
+train[["Sex", "Survived"]].groupby(['Sex'], as_index=False).mean().sort_values(by='Survived', ascending=False)
+
 #Feature: Age
 train.Age.isnull().sum()
+
+g = sns.FacetGrid(train, col='Survived')
+g.map(plt.hist, 'Age', bins=20)
 
 #Feature: SibSp
 # How many missing values does SibSp have?
@@ -98,6 +113,8 @@ plot_count_dist(train,
                 target_column='SibSp', 
                 figsize=(20, 10))
 
+train[["SibSp", "Survived"]].groupby(['SibSp'], as_index=False).mean().sort_values(by='Survived', ascending=False)
+
 #Feature: Parch
 # How many missing values does Parch have?
 train.Parch.isnull().sum()
@@ -111,6 +128,8 @@ plot_count_dist(train,
                 label_column='Survived', 
                 target_column='Parch', 
                 figsize=(20, 10))
+
+train[["Parch", "Survived"]].groupby(['Parch'], as_index=False).mean().sort_values(by='Survived', ascending=False)
 
 #Feature: Ticket
 train.Ticket.isnull().sum()
@@ -148,6 +167,51 @@ train.Embarked.isnull().sum()
 
 # What kind of values are in Embarked?
 train.Embarked.value_counts()
+
+grid = sns.FacetGrid(train, row='Embarked', size=2.2, aspect=1.6)
+grid.map(sns.pointplot, 'Pclass', 'Survived', 'Sex', palette='deep')
+grid.add_legend()
+
+grid = sns.FacetGrid(train, row='Embarked', col='Survived', size=2.2, aspect=1.6)
+grid.map(sns.barplot, 'Sex', 'Fare', alpha=.5, ci=None)
+grid.add_legend()
+
+#Wrangle data
+print("Before", train.shape, test.shape, combine[0].shape, combine[1].shape)
+
+train_df = train.drop(['Ticket', 'Cabin'], axis=1)
+test_df = test.drop(['Ticket', 'Cabin'], axis=1)
+combine = [train_df, test_df]
+
+"After", train_df.shape, test_df.shape, combine[0].shape, combine[1].shape
+
+#Extract titles from names to fill missing ages
+for dataset in combine:
+    dataset['Title'] = dataset.Name.str.extract(' ([A-Za-z]+)\.', expand=False)
+
+pd.crosstab(train_df['Title'], train_df['Sex'])
+
+
+for dataset in combine:
+    dataset['Title'] = dataset['Title'].replace(['Lady', 'Countess','Capt', 'Col',\
+ 	'Don', 'Dr', 'Major', 'Rev', 'Sir', 'Jonkheer', 'Dona'], 'Rare')
+
+    dataset['Title'] = dataset['Title'].replace('Mlle', 'Miss')
+    dataset['Title'] = dataset['Title'].replace('Ms', 'Miss')
+    dataset['Title'] = dataset['Title'].replace('Mme', 'Mrs')
+
+train_df[['Title', 'Survived']].groupby(['Title'], as_index=False).mean()
+
+#convert the categorical titles to ordinal
+title_mapping = {"Mr": 1, "Miss": 2, "Mrs": 3, "Master": 4, "Rare": 5}
+for dataset in combine:
+    dataset['Title'] = dataset['Title'].map(title_mapping)
+    dataset['Title'] = dataset['Title'].fillna(0)
+
+train_df.head()
+
+#Drop Name feature
+
 
 #Function Definitions
 def plot_count_dist(data, bin_df, label_column, target_column, figsize=(20, 5), use_bin_df=False):
