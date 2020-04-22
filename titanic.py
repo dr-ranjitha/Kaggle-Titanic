@@ -322,6 +322,103 @@ combine = [train_df, test_df]
     
 train_df.head(10)
 
+#Training and testing data
+X_train = train_df.drop("Survived", axis=1)
+y_train = train_df["Survived"]
+X_test  = test_df.drop("PassengerId", axis=1).copy()
+X_train.shape, Y_train.shape, X_test.shape
+
+# Logistic Regression
+
+train_pred_log, acc_log, acc_cv_log = fit_ml_algo(LogisticRegression(), 
+                                                               X_train, 
+                                                               y_train, 
+                                                                    10)
+log_time = (time.time() - start_time)
+print("Accuracy: %s" % acc_log)
+print("Accuracy CV 10-Fold: %s" % acc_cv_log)
+print("Running Time: %s" % datetime.timedelta(seconds=log_time))
+
+# k-Nearest Neighbours
+start_time = time.time()
+train_pred_knn, acc_knn, acc_cv_knn = fit_ml_algo(KNeighborsClassifier(), 
+                                                  X_train, 
+                                                  y_train, 
+                                                  10)
+knn_time = (time.time() - start_time)
+print("Accuracy: %s" % acc_knn)
+print("Accuracy CV 10-Fold: %s" % acc_cv_knn)
+print("Running Time: %s" % datetime.timedelta(seconds=knn_time))
+
+# Gaussian Naive Bayes
+start_time = time.time()
+train_pred_gaussian, acc_gaussian, acc_cv_gaussian = fit_ml_algo(GaussianNB(), 
+                                                                      X_train, 
+                                                                      y_train, 
+                                                                           10)
+gaussian_time = (time.time() - start_time)
+print("Accuracy: %s" % acc_gaussian)
+print("Accuracy CV 10-Fold: %s" % acc_cv_gaussian)
+print("Running Time: %s" % datetime.timedelta(seconds=gaussian_time))
+
+# Linear SVC
+start_time = time.time()
+train_pred_svc, acc_linear_svc, acc_cv_linear_svc = fit_ml_algo(LinearSVC(),
+                                                                X_train, 
+                                                                y_train, 
+                                                                10)
+linear_svc_time = (time.time() - start_time)
+print("Accuracy: %s" % acc_linear_svc)
+print("Accuracy CV 10-Fold: %s" % acc_cv_linear_svc)
+print("Running Time: %s" % datetime.timedelta(seconds=linear_svc_time))
+
+# Stochastic Gradient Descent
+start_time = time.time()
+train_pred_sgd, acc_sgd, acc_cv_sgd = fit_ml_algo(SGDClassifier(), 
+                                                  X_train, 
+                                                  y_train,
+                                                  10)
+sgd_time = (time.time() - start_time)
+print("Accuracy: %s" % acc_sgd)
+print("Accuracy CV 10-Fold: %s" % acc_cv_sgd)
+print("Running Time: %s" % datetime.timedelta(seconds=sgd_time))
+
+# Decision Tree Classifier
+start_time = time.time()
+train_pred_dt, acc_dt, acc_cv_dt = fit_ml_algo(DecisionTreeClassifier(), 
+                                                                X_train, 
+                                                                y_train,
+                                                                10)
+dt_time = (time.time() - start_time)
+print("Accuracy: %s" % acc_dt)
+print("Accuracy CV 10-Fold: %s" % acc_cv_dt)
+print("Running Time: %s" % datetime.timedelta(seconds=dt_time))
+
+# Gradient Boosting Trees
+start_time = time.time()
+train_pred_gbt, acc_gbt, acc_cv_gbt = fit_ml_algo(GradientBoostingClassifier(), 
+                                                                       X_train, 
+                                                                       y_train,
+                                                                       10)
+gbt_time = (time.time() - start_time)
+print("Accuracy: %s" % acc_gbt)
+print("Accuracy CV 10-Fold: %s" % acc_cv_gbt)
+print("Running Time: %s" % datetime.timedelta(seconds=gbt_time))
+
+# Random Forest
+start_time = time.time()
+#y_pred, train_pred, acc, acc_cv = fit_ml_algo(RandomForestClassifier(n_estimators=100), X_train)
+# Random Forest
+random_forest = RandomForestClassifier(n_estimators=100)
+random_forest.fit(X_train, Y_train)
+Y_pred = random_forest.predict(X_test)
+random_forest.score(X_train, Y_train)
+acc_random_forest = round(random_forest.score(X_train, Y_train) * 100, 2)
+
+rf_time = (time.time() - start_time)
+
+print("Accuracy: %s" % acc_random_forest)
+print("Running Time: %s" % datetime.timedelta(seconds=rf_time))
 
 #Function Definitions
 def plot_count_dist(data, bin_df, label_column, target_column, figsize=(20, 5), use_bin_df=False):
@@ -353,3 +450,23 @@ def plot_count_dist(data, bin_df, label_column, target_column, figsize=(20, 5), 
                      kde_kws={"label": "Survived"});
         sns.distplot(data.loc[data[label_column] == 0][target_column], 
                      kde_kws={"label": "Did not survive"});
+
+# Function that runs the requested algorithm and returns the accuracy metrics
+def fit_ml_algo(algo, X_train, y_train, cv):
+    #def fit_ml_algo(algo, X_train, y_train, X_test, cv):
+    # One Pass
+    start_time = time.time()
+    model = algo.fit(X_train, y_train)    
+    y_pred = model.predict(X_test)
+    acc = round(model.score(X_train, y_train) * 100, 2)
+    
+    # Cross Validation 
+    train_pred = model_selection.cross_val_predict(algo, 
+                                                  X_train, 
+                                                  y_train, 
+                                                  cv=cv, 
+                                                  n_jobs = -1)
+    # Cross-validation accuracy metric
+    acc_cv = round(metrics.accuracy_score(y_train, train_pred) * 100, 2)
+    
+    return y_pred, train_pred, acc, acc_cv
